@@ -1,0 +1,15 @@
+=CLIENT BRIEF
+Client: {{ $json.ctx.client_name }}
+Business: {{ $json.ctx.business_description }}
+Industry: {{ $json.ctx.industry }}
+Target audience: {{ $json.ctx.target_audience }}
+Location: {{ $json.ctx.location }}
+Content goal: {{ $json.ctx.content_goal }}
+Brand tone: {{ $json.ctx.brand_tone }}
+
+CANDIDATE VIDEO
+Platform: {{ $json.platform }}
+Creator: {{ $json.creator }} ({{ $json.followers }} followers)
+Posted: {{ $json.posted_at }}
+Views: {{ $json.views }} | Likes: {{ $json.likes }} | Comments: {{ $json.comments }} | Shares: {{ $json.shares }}
+Caption: {{ String($json.caption || "").slice(0, 1200) }}
