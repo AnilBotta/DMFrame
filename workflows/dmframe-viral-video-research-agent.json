@@ -1,0 +1,2860 @@
+{
+  "name": "DMFrame - Viral Video Research Agent",
+  "nodes": [
+    {
+      "id": "64af0a70-c725-4b30-9e4a-4cd5d926a8e6",
+      "name": "Client Brief Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        352
+      ],
+      "parameters": {
+        "formTitle": "DMFrame - Viral Video Research Brief",
+        "formDescription": "Tell us about the business. We will find the best-performing public videos on Facebook, Instagram, X and LinkedIn for it.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Client name",
+              "fieldType": "text",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Business description",
+              "fieldType": "textarea",
+              "requiredField": true,
+              "placeholder": "What the business does and sells"
+            },
+            {
+              "fieldLabel": "Industry",
+              "fieldType": "text",
+              "requiredField": true,
+              "placeholder": "e.g. Financial services"
+            },
+            {
+              "fieldLabel": "Target audience",
+              "fieldType": "textarea",
+              "placeholder": "Who they want to reach"
+            },
+            {
+              "fieldLabel": "Location",
+              "fieldType": "text",
+              "defaultValue": "Canada"
+            },
+            {
+              "fieldLabel": "Language",
+              "fieldType": "text",
+              "defaultValue": "English"
+            },
+            {
+              "fieldLabel": "Keywords",
+              "fieldType": "textarea",
+              "requiredField": true,
+              "placeholder": "Comma-separated, e.g. retirement planning, debt free"
+            },
+            {
+              "fieldLabel": "Hashtags",
+              "fieldType": "text",
+              "placeholder": "Comma-separated, e.g. financialliteracy, moneytips"
+            },
+            {
+              "fieldLabel": "Competitor URLs",
+              "fieldType": "textarea",
+              "placeholder": "Public profile or page URLs, one per line"
+            },
+            {
+              "fieldLabel": "Platforms",
+              "fieldType": "checkbox",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Facebook"
+                  },
+                  {
+                    "option": "Instagram"
+                  },
+                  {
+                    "option": "X (Twitter)"
+                  },
+                  {
+                    "option": "LinkedIn"
+                  }
+                ]
+              },
+              "defaultValue": "Facebook,Instagram,X (Twitter),LinkedIn"
+            },
+            {
+              "fieldLabel": "Content goal",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Awareness"
+                  },
+                  {
+                    "option": "Leads"
+                  },
+                  {
+                    "option": "Sales"
+                  },
+                  {
+                    "option": "Engagement"
+                  }
+                ]
+              },
+              "defaultValue": "Awareness"
+            },
+            {
+              "fieldLabel": "Brand tone",
+              "fieldType": "text",
+              "placeholder": "e.g. trustworthy, educational"
+            },
+            {
+              "fieldLabel": "Minimum views override",
+              "fieldType": "number",
+              "placeholder": "Optional. Leave empty for platform defaults"
+            },
+            {
+              "fieldLabel": "Max results",
+              "fieldType": "number",
+              "defaultValue": "20"
+            },
+            {
+              "fieldLabel": "Run weekly",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Yes"
+                  },
+                  {
+                    "option": "No"
+                  }
+                ]
+              },
+              "defaultValue": "Yes"
+            }
+          ]
+        },
+        "responseMode": "onReceived",
+        "options": {
+          "appendAttribution": false,
+          "path": "dmframe-brief",
+          "buttonLabel": "Start research",
+          "respondWithOptions": {
+            "values": {
+              "respondWith": "text",
+              "formSubmittedText": "Brief received. Research is running and a summary will arrive on Telegram."
+            }
+          }
+        }
+      },
+      "webhookId": "747c1740-8883-41d9-9cc3-7c31e8061ee6"
+    },
+    {
+      "id": "389d4197-6b47-40b1-a21c-36316d3723bf",
+      "name": "Map Form To Brief",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        352
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const f = $input.first().json;\nconst g = (k) => (f[k] === undefined || f[k] === null ? '' : f[k]);\nconst plats = Array.isArray(g('Platforms')) ? g('Platforms').join(', ') : String(g('Platforms'));\nreturn [{ json: {\n  client_name: String(g('Client name')),\n  business_description: String(g('Business description')),\n  industry: String(g('Industry')),\n  target_audience: String(g('Target audience')),\n  location: String(g('Location')),\n  language: String(g('Language')),\n  keywords: String(g('Keywords')),\n  hashtags: String(g('Hashtags')),\n  competitor_urls: String(g('Competitor URLs')),\n  platforms: plats,\n  content_goal: String(g('Content goal')),\n  brand_tone: String(g('Brand tone')),\n  min_views_override: Number(g('Minimum views override')) || 0,\n  max_results: Number(g('Max results')) || 20,\n  active: String(g('Run weekly')).toLowerCase() !== 'no',\n  submitted_at: new Date().toISOString()\n} }];"
+      }
+    },
+    {
+      "id": "c4ceee28-726f-4bec-84fd-218acf0c429d",
+      "name": "Save Raw Brief",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        272
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "q7VnqFbuLev4kqnW"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "client_name": "={{ $json.client_name }}",
+            "business_description": "={{ $json.business_description }}",
+            "industry": "={{ $json.industry }}",
+            "target_audience": "={{ $json.target_audience }}",
+            "location": "={{ $json.location }}",
+            "language": "={{ $json.language }}",
+            "keywords": "={{ $json.keywords }}",
+            "hashtags": "={{ $json.hashtags }}",
+            "competitor_urls": "={{ $json.competitor_urls }}",
+            "platforms": "={{ $json.platforms }}",
+            "content_goal": "={{ $json.content_goal }}",
+            "brand_tone": "={{ $json.brand_tone }}",
+            "min_views_override": "={{ $json.min_views_override }}",
+            "max_results": "={{ $json.max_results }}",
+            "active": "={{ $json.active }}",
+            "submitted_at": "={{ $json.submitted_at }}"
+          },
+          "schema": [
+            {
+              "id": "client_name",
+              "displayName": "client_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "business_description",
+              "displayName": "business_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "industry",
+              "displayName": "industry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "target_audience",
+              "displayName": "target_audience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "language",
+              "displayName": "language",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "keywords",
+              "displayName": "keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "competitor_urls",
+              "displayName": "competitor_urls",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "platforms",
+              "displayName": "platforms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "content_goal",
+              "displayName": "content_goal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "brand_tone",
+              "displayName": "brand_tone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "min_views_override",
+              "displayName": "min_views_override",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "max_results",
+              "displayName": "max_results",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "active",
+              "displayName": "active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "submitted_at",
+              "displayName": "submitted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "30fb411e-1982-492f-b99e-9a4de491673f",
+      "name": "Build Run Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        192
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const row = $input.first().json;\nconst list = (v) => String(v == null ? '' : v).split(/[\\n,;]+/).map((s) => s.trim()).filter(Boolean);\nconst tagify = (s) => String(s).toLowerCase().replace(/[^a-z0-9_]/g, '');\nconst cfg = {\n  maxAgeDays: 30,\n  aiCandidates: 40,\n  perPlatformLimit: 30,\n  maxQueries: 5,\n  minViews: { instagram: 5000, facebook: 5000, x: 1000, linkedin: 500 },\n  fallbackMinInteractions: 50,\n  weights: { velocity: 0.4, engagement: 0.25, leverage: 0.2, recency: 0.15 },\n  finalWeights: { metrics: 0.6, ai: 0.4 },\n  minRelevance: 5,\n  compliancePenalty: 15,\n  defaultMaxResults: 20\n};\nconst keywords = list(row.keywords);\nconst hashtags = list(row.hashtags).map(tagify).filter(Boolean);\nconst brief = {\n  client_name: String(row.client_name || 'Unnamed client'),\n  business_description: String(row.business_description || ''),\n  industry: String(row.industry || ''),\n  target_audience: String(row.target_audience || ''),\n  location: String(row.location || ''),\n  language: String(row.language || 'English'),\n  content_goal: String(row.content_goal || ''),\n  brand_tone: String(row.brand_tone || ''),\n  keywords: keywords,\n  hashtags: hashtags,\n  competitor_urls: list(row.competitor_urls),\n  min_views_override: Number(row.min_views_override) > 0 ? Number(row.min_views_override) : null,\n  max_results: Number(row.max_results) > 0 ? Number(row.max_results) : cfg.defaultMaxResults\n};\nconst wanted = String(row.platforms || '').toLowerCase();\nconst all = !wanted.trim();\nconst platforms = [];\nif (all || wanted.indexOf('instagram') > -1) platforms.push('instagram');\nif ((all || wanted.indexOf('facebook') > -1) && /facebook\\.com|fb\\.com/i.test(String(row.competitor_urls || ''))) platforms.push('facebook');\nif (all || wanted.indexOf('twitter') > -1 || /(^|[^a-z])x([^a-z]|$)/.test(wanted)) platforms.push('x');\nif (all || wanted.indexOf('linkedin') > -1) platforms.push('linkedin');\nconst tagPool = hashtags.concat(keywords.map(tagify)).filter(Boolean);\nconst tags = tagPool.filter((t, i) => tagPool.indexOf(t) === i).slice(0, cfg.maxQueries);\nconst terms = keywords.concat(hashtags.map((h) => '#' + h)).concat([brief.industry]).filter(Boolean).slice(0, cfg.maxQueries);\nconst ofHost = (re) => brief.competitor_urls.filter((u) => re.test(u));\nconst igUrls = ofHost(/instagram\\.com/i);\nconst fbUrls = ofHost(/facebook\\.com|fb\\.com/i);\nconst xUrls = ofHost(/twitter\\.com|x\\.com/i);\nconst handle = (u) => String(u).replace(/[?#].*$/, '').split('/').filter(Boolean).pop();\nconst since = new Date(Date.now() - cfg.maxAgeDays * 86400000).toISOString().slice(0, 10);\nconst inputs = {\n  instagram: {\n    directUrls: tags.map((t) => 'https://www.instagram.com/explore/tags/' + t + '/').concat(igUrls),\n    resultsType: 'reels',\n    resultsLimit: cfg.perPlatformLimit\n  },\n  facebook: {\n    startUrls: fbUrls.map((u) => ({ url: u })),\n    resultsLimit: cfg.perPlatformLimit\n  },\n  x: {\n    searchTerms: terms.map((t) => t + ' filter:native_video min_faves:5 since:' + since),\n    twitterHandles: xUrls.map(handle),\n    maxItems: 60,\n    sort: 'Top',\n    onlyVideo: true\n  },\n  linkedin: {\n    searchQueries: terms.slice(0, 3),\n    postedLimit: 'month',\n    sortBy: 'relevance',\n    maxPosts: cfg.perPlatformLimit\n  }\n};\nconst runDate = new Date().toISOString();\nconst runId = 'run_' + runDate.slice(0, 10).replace(/-/g, '') + '_' + Math.random().toString(36).slice(2, 7);\nreturn platforms.map((p) => ({ json: { platform: p, apifyInput: inputs[p], brief: brief, config: cfg, run_id: runId, run_date: runDate } }));"
+      }
+    },
+    {
+      "id": "1822cc65-57d9-4ef9-b462-737c504e3184",
+      "name": "Route By Platform",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        160
+      ],
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "renameOutput": true,
+              "outputKey": "instagram",
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "instagram"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "facebook",
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "facebook"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "x",
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "x"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "linkedin",
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "linkedin"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1b3ecdec-1f16-461f-96db-da2fc778c95a",
+      "name": "Scrape Instagram (Apify)",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "resource": "Actors",
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "cachedResultName": "Instagram Scraper (apify/instagram-scraper)",
+          "mode": "id",
+          "value": "shu8hvrXbJbY3Eb9W"
+        },
+        "customBody": "={{ JSON.stringify($json.apifyInput) }}",
+        "timeout": 900,
+        "memory": 2048
+      },
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "apifyApi": {
+          "id": "mf6PipTVEm9KDXHc",
+          "name": "Syncai Apify account"
+        }
+      }
+    },
+    {
+      "id": "8ce85cc8-1ae1-48be-ad75-56938c0c40e2",
+      "name": "Tag Instagram",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "tag-ig",
+              "name": "_platform",
+              "value": "instagram",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "14d2efec-d058-4a9b-8c6b-0023b5e9223a",
+      "name": "Combine Platform Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1568,
+        160
+      ],
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 4
+      }
+    },
+    {
+      "id": "9e73ff47-e910-4356-bd98-38237b609308",
+      "name": "Scrape Facebook (Apify)",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        192
+      ],
+      "parameters": {
+        "resource": "Actors",
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "cachedResultName": "Facebook Posts Scraper (apify/facebook-posts-scraper)",
+          "mode": "id",
+          "value": "KoJrdxJCTtpon81KY"
+        },
+        "customBody": "={{ JSON.stringify($json.apifyInput) }}",
+        "timeout": 900,
+        "memory": 2048
+      },
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "apifyApi": {
+          "id": "mf6PipTVEm9KDXHc",
+          "name": "Syncai Apify account"
+        }
+      }
+    },
+    {
+      "id": "08ffd908-b527-44ea-b7b4-6fb999bd32d6",
+      "name": "Tag Facebook",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        192
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "tag-fb",
+              "name": "_platform",
+              "value": "facebook",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "46600ba7-0e96-4e9d-8e47-50c7ac32f62b",
+      "name": "Scrape X (Apify)",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        384
+      ],
+      "parameters": {
+        "resource": "Actors",
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "cachedResultName": "Tweet Scraper V2 (apidojo/tweet-scraper)",
+          "mode": "id",
+          "value": "61RPP7dywgiy0JPD0"
+        },
+        "customBody": "={{ JSON.stringify($json.apifyInput) }}",
+        "timeout": 900,
+        "memory": 1024
+      },
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "apifyApi": {
+          "id": "mf6PipTVEm9KDXHc",
+          "name": "Syncai Apify account"
+        }
+      }
+    },
+    {
+      "id": "0aa11438-ead4-4ad7-98ea-0983ee5e51b2",
+      "name": "Tag X",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        384
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "tag-x",
+              "name": "_platform",
+              "value": "x",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "259d55d7-4e92-46c2-8523-8fbe6a1b4933",
+      "name": "Scrape LinkedIn (Apify)",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        576
+      ],
+      "parameters": {
+        "resource": "Actors",
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "cachedResultName": "Linkedin Post Search Scraper (harvestapi/linkedin-post-search)",
+          "mode": "id",
+          "value": "buIWk2uOUzTmcLsuB"
+        },
+        "customBody": "={{ JSON.stringify($json.apifyInput) }}",
+        "timeout": 900,
+        "memory": 1024
+      },
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "apifyApi": {
+          "id": "mf6PipTVEm9KDXHc",
+          "name": "Syncai Apify account"
+        }
+      }
+    },
+    {
+      "id": "9c441b89-63ae-4a79-8ebb-6536dd7121e8",
+      "name": "Tag LinkedIn",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        576
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "tag-li",
+              "name": "_platform",
+              "value": "linkedin",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "65e1b373-2287-447c-9fe9-6cc0eba639c9",
+      "name": "One Brief At A Time",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        544
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "52fe9f6c-e792-4471-8a97-767fcf08f7b9",
+      "name": "Weekly Monday 7am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        560
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 7,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "e7c68807-11c2-45a9-806e-1737f8295286",
+      "name": "Get Active Briefs",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        560
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "q7VnqFbuLev4kqnW"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "active",
+              "condition": "isTrue"
+            }
+          ]
+        },
+        "returnAll": true
+      }
+    },
+    {
+      "id": "cc87cbe5-e905-4dd2-af5f-78d15ccfc029",
+      "name": "Process Candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        192
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const plan = $('Build Run Plan').first().json;\nconst cfg = plan.config;\nconst brief = plan.brief;\nconst requested = $('Build Run Plan').all().map((i) => i.json.platform);\nconst all = $input.all().map((i) => i.json);\nconst errs = {};\nconst raw = [];\nfor (const r of all) {\n  if (!r) continue;\n  if (r.error || r.noResults) { errs[r._platform] = (errs[r._platform] || 0) + 1; continue; }\n  raw.push(r);\n}\nconst num = (...vals) => { for (const v of vals) { if (v === undefined || v === null || v === '') continue; const x = typeof v === 'string' ? Number(v.replace(/[,\\s]/g, '')) : Number(v); if (Number.isFinite(x)) return x; } return null; };\nconst when = (...vals) => { for (const v of vals) { if (!v) continue; const t = typeof v === 'number' ? (v < 1e12 ? v * 1000 : v) : Date.parse(v); if (Number.isFinite(t)) return new Date(t).toISOString(); } return null; };\nconst first = (...vals) => { for (const v of vals) { if (v !== undefined && v !== null && v !== '') return v; } return null; };\nconst norm = {\n  instagram: (r) => ({\n    url: first(r.url, r.shortCode ? 'https://www.instagram.com/reel/' + r.shortCode + '/' : null),\n    is_video: r.type === 'Video' || r.productType === 'clips' || !!r.videoUrl,\n    views: num(r.videoPlayCount, r.videoViewCount, r.playsCount),\n    likes: num(r.likesCount), comments: num(r.commentsCount), shares: null,\n    posted_at: when(r.timestamp, r.takenAtTimestamp),\n    creator: first(r.ownerUsername, r.ownerFullName),\n    followers: num(r.ownerFollowersCount, r.followersCount),\n    caption: first(r.caption), duration: num(r.videoDuration)\n  }),\n  facebook: (r) => ({\n    url: first(r.url, r.postUrl, r.topLevelUrl),\n    is_video: !!(r.isVideo || r.videoUrl || r.video || (r.media && r.media.some && r.media.some((m) => /video/i.test(String(m.__typename || m.type || ''))))),\n    views: num(r.viewsCount, r.videoViewCount, r.playCount, r.views),\n    likes: num(r.likes, r.likesCount, r.reactionsCount), comments: num(r.comments, r.commentsCount), shares: num(r.shares, r.sharesCount),\n    posted_at: when(r.time, r.timestamp, r.date),\n    creator: first(r.pageName, r.user && r.user.name),\n    followers: num(r.pageFollowers, r.followers),\n    caption: first(r.text, r.message), duration: num(r.videoDuration)\n  }),\n  x: (r) => {\n    const media = (r.extendedEntities && r.extendedEntities.media) || r.media || [];\n    return {\n      url: first(r.url, r.twitterUrl),\n      is_video: !!(r.hasVideo || (media.some && media.some((m) => m.type === 'video' || m.type === 'animated_gif'))),\n      views: num(r.viewCount, r.views), likes: num(r.likeCount), comments: num(r.replyCount),\n      shares: (num(r.retweetCount) || 0) + (num(r.quoteCount) || 0),\n      posted_at: when(r.createdAt),\n      creator: first(r.author && r.author.userName, r.author && r.author.username),\n      followers: num(r.author && r.author.followers, r.author && r.author.followersCount),\n      caption: first(r.fullText, r.text), duration: null\n    };\n  },\n  linkedin: (r) => ({\n    url: first(r.linkedinUrl, r.url, r.postUrl),\n    is_video: !!(r.postVideo || r.video || r.videoUrl),\n    views: num(r.viewsCount, r.views, r.engagement && r.engagement.views),\n    likes: num(r.engagement && r.engagement.likes, r.likes, r.numLikes),\n    comments: num(r.engagement && r.engagement.comments, r.comments, r.numComments),\n    shares: num(r.engagement && r.engagement.shares, r.shares, r.numShares),\n    posted_at: when(r.postedAt && r.postedAt.timestamp, r.postedAt && r.postedAt.date, r.postedAt, r.time),\n    creator: first(r.author && r.author.name),\n    followers: num(r.author && r.author.followers, r.author && r.author.followersCount),\n    caption: first(r.content, r.text), duration: null\n  })\n};\nconst store = $getWorkflowStaticData('global');\nconst seen = store.seen || {};\nconst now = Date.now();\nconst counts = {};\nconst keys = {};\nconst pool = [];\nconst scraped = [];\nconst scrapedKeys = {};\nconst tabOf = { instagram: 'Instagram', facebook: 'Facebook', linkedin: 'LinkedIn', x: 'X (Twitter)' };\nfor (const r of raw) {\n  const p = r._platform;\n  counts[p] = (counts[p] || 0) + 1;\n  const fn = norm[p];\n  if (!fn) continue;\n  const v = fn(r);\n  if (!v.url || !v.is_video) continue;\n  v.url = p === 'facebook' ? String(v.url) : String(v.url).replace(/[?#].*$/, '');\n  const ageDays = v.posted_at ? (now - Date.parse(v.posted_at)) / 86400000 : null;\n  const srow = {\n    tab: tabOf[p] || p, run_id: plan.run_id, run_date: plan.run_date, client_name: brief.client_name, platform: p, post_url: v.url,\n    creator: v.creator || '', followers: v.followers === null ? '' : v.followers, views: v.views === null ? '' : v.views,\n    likes: v.likes === null ? '' : v.likes, comments: v.comments === null ? '' : v.comments, shares: v.shares === null ? '' : v.shares,\n    posted_at: v.posted_at || '', status: 'candidate', metrics_score: '', caption_preview: String(v.caption || '').slice(0, 200)\n  };\n  const sk = p + '|' + v.url;\n  if (!scrapedKeys[sk]) { scrapedKeys[sk] = true; scraped.push(srow); }\n  if (ageDays !== null && ageDays > cfg.maxAgeDays) { srow.status = 'too_old'; continue; }\n  const interactions = (v.likes || 0) + (v.comments || 0) * 2 + (v.shares || 0) * 3;\n  const minViews = brief.min_views_override || cfg.minViews[p];\n  if (v.views !== null) { if (v.views < minViews) { srow.status = 'below_min_views'; continue; } } else if (interactions < cfg.fallbackMinInteractions) { srow.status = 'below_min_engagement'; continue; }\n  const key = brief.client_name.toLowerCase() + '|' + v.url;\n  if (keys[key] || seen[key]) { srow.status = 'already_seen'; continue; }\n  keys[key] = true;\n  const days = Math.max(ageDays === null ? 14 : ageDays, 1);\n  v.platform = p;\n  v._srow = srow;\n  v.interactions = interactions;\n  v.velocity = v.views !== null ? v.views / days : (interactions * 10) / days;\n  v.engagement_rate = v.views ? interactions / v.views : (v.followers ? interactions / v.followers : null);\n  v.leverage = (v.views !== null && v.followers) ? v.views / v.followers : null;\n  v.recency = days <= 7 ? 1 : (days <= 14 ? 0.6 : 0.3);\n  v.views_estimated = v.views === null;\n  pool.push(v);\n}\nconst pct = (list, x) => { if (x === null || x === undefined || list.length < 5) return null; let c = 0; for (const y of list) { if (y <= x) c++; } return c / list.length; };\nconst logScale = (x, cap) => (x === null || x === undefined) ? null : Math.min(Math.log10(x + 1) / cap, 1);\nconst pick = (a, b) => (a !== null ? a : b);\nfor (const c of pool) {\n  const grp = pool.filter((z) => z.platform === c.platform);\n  const parts = {\n    velocity: pick(pct(grp.map((z) => z.velocity), c.velocity), logScale(c.velocity, 5)),\n    engagement: pick(pct(grp.filter((z) => z.engagement_rate !== null).map((z) => z.engagement_rate), c.engagement_rate), c.engagement_rate === null ? null : Math.min(c.engagement_rate / 0.1, 1)),\n    leverage: pick(pct(grp.filter((z) => z.leverage !== null).map((z) => z.leverage), c.leverage), logScale(c.leverage, 3)),\n    recency: c.recency\n  };\n  let tot = 0; let acc = 0;\n  for (const k of Object.keys(cfg.weights)) { const s = parts[k]; if (s !== null && s !== undefined) { tot += cfg.weights[k]; acc += cfg.weights[k] * s; } }\n  c.metrics_score = tot > 0 ? Math.round((acc / tot) * 1000) / 10 : 0;\n  c.confidence = Math.round(tot * 100) / 100;\n  if (c._srow) { c._srow.metrics_score = c.metrics_score; }\n}\npool.sort((a, b) => b.metrics_score - a.metrics_score);\nconst ctx = {\n  run_id: plan.run_id, run_date: plan.run_date, client_name: brief.client_name,\n  business_description: brief.business_description, industry: brief.industry,\n  target_audience: brief.target_audience, location: brief.location, language: brief.language,\n  content_goal: brief.content_goal, brand_tone: brief.brand_tone, max_results: brief.max_results\n};\nconst candidates = pool.slice(0, cfg.aiCandidates).map((c) => { c.ctx = ctx; delete c._srow; return c; });\nfor (const c of pool.slice(cfg.aiCandidates)) { if (c._srow) c._srow.status = 'not_ai_scored'; }\nconst withData = Object.keys(counts);\nconst withErrors = Object.keys(errs);\nconst esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst note = 'No new qualifying videos for ' + brief.client_name + ' (' + plan.run_id + '). Platforms with data: ' + (withData.join(', ') || 'none') + '. Platforms with errors/blocked: ' + (withErrors.join(', ') || 'none') + '. Requested: ' + requested.join(', ') + '.';\nreturn [{ json: {\n  run_id: plan.run_id, run_date: plan.run_date, client_name: brief.client_name,\n  platforms_requested: requested.join(', '), platforms_with_data: withData.join(', '),\n  platforms_with_errors: withErrors.join(', '),\n  candidates_found: raw.length, videos_kept: 0, top_urls: '',\n  status: candidates.length ? 'candidates_ready' : 'no_new_videos',\n  summary_text: esc(note), scraped: scraped, candidates: candidates\n} }];"
+      }
+    },
+    {
+      "id": "334823d0-07ff-4ff9-aceb-2e978076fddd",
+      "name": "Any New Candidates?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2016,
+        192
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.candidates.length }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "d6c504f7-991c-4fc3-859c-fe61179badc8",
+      "name": "Split Candidates",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        128
+      ],
+      "parameters": {
+        "fieldToSplitOut": "candidates",
+        "include": "noOtherFields"
+      }
+    },
+    {
+      "id": "bdeb9958-c834-442c-8dcf-888112a1fbb7",
+      "name": "AI Score Video",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        2464,
+        128
+      ],
+      "parameters": {
+        "resource": "text",
+        "operation": "response",
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-5.6-luna"
+        },
+        "responses": {
+          "values": [
+            {
+              "type": "text",
+              "role": "system",
+              "content": "You are a senior social media strategist who evaluates short-form videos for a client's marketing research. Judge the video ONLY from the metadata provided. Score honestly: most videos are not a 9 or 10. relevance_to_business: how well the topic, audience and message fit the client's business, audience and goal (0-10). hook_strength: how likely the opening or caption is to stop the scroll (0-10). content_quality: clarity, value and shareability (0-10). cta_present: true if there is a clear call to action. content_format: a short label such as talking head, tutorial, UGC, testimonial, meme, explainer or before/after. why_it_works: at most 2 sentences. how_to_replicate: at most 2 sentences on how this client could make a similar, original video in their own brand voice (do not copy the creator). compliance_flags: this client is in financial services, so list every issue that applies from income_claims, guaranteed_returns, get_rich_language, unlicensed_advice, misleading_recruitment, or use none. risk_flags: any other risks such as off-brand, copyrighted music or controversial. Return only JSON that matches the schema."
+            },
+            {
+              "type": "text",
+              "role": "user",
+              "content": "=CLIENT BRIEF\nClient: {{ $json.ctx.client_name }}\nBusiness: {{ $json.ctx.business_description }}\nIndustry: {{ $json.ctx.industry }}\nTarget audience: {{ $json.ctx.target_audience }}\nLocation: {{ $json.ctx.location }}\nContent goal: {{ $json.ctx.content_goal }}\nBrand tone: {{ $json.ctx.brand_tone }}\n\nCANDIDATE VIDEO\nPlatform: {{ $json.platform }}\nCreator: {{ $json.creator }} ({{ $json.followers }} followers)\nPosted: {{ $json.posted_at }}\nViews: {{ $json.views }} | Likes: {{ $json.likes }} | Comments: {{ $json.comments }} | Shares: {{ $json.shares }}\nCaption: {{ String($json.caption || \"\").slice(0, 1200) }}"
+            }
+          ]
+        },
+        "simplify": true,
+        "options": {
+          "maxTokens": 1500,
+          "store": false,
+          "textFormat": {
+            "textOptions": {
+              "type": "json_schema",
+              "name": "viral_video_assessment",
+              "strict": true,
+              "schema": "{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"relevance_to_business\",\"hook_strength\",\"content_quality\",\"cta_present\",\"content_format\",\"why_it_works\",\"how_to_replicate\",\"risk_flags\",\"compliance_flags\"],\"properties\":{\"relevance_to_business\":{\"type\":\"number\"},\"hook_strength\":{\"type\":\"number\"},\"content_quality\":{\"type\":\"number\"},\"cta_present\":{\"type\":\"boolean\"},\"content_format\":{\"type\":\"string\"},\"why_it_works\":{\"type\":\"string\"},\"how_to_replicate\":{\"type\":\"string\"},\"risk_flags\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"compliance_flags\":{\"type\":\"array\",\"items\":{\"type\":\"string\",\"enum\":[\"income_claims\",\"guaranteed_returns\",\"get_rich_language\",\"unlicensed_advice\",\"misleading_recruitment\",\"none\"]}}}}"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "openAiApi": {
+          "id": "R8GVjHH3LamryVVX",
+          "name": "VR shipping OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "6f3f551c-5e16-485b-aa4e-0b0c2396c105",
+      "name": "Combine And Rank",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        288
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const plan = $('Build Run Plan').first().json;\nconst cfg = plan.config;\nconst brief = plan.brief;\nconst proc = $('Process Candidates').first().json;\nconst cands = $('Split Candidates').all().map((i) => i.json);\nconst outs = $input.all().map((i) => i.json);\nconst findAi = (o) => {\n  if (o === null || o === undefined) return null;\n  if (typeof o === 'string') {\n    if (o.indexOf('relevance_to_business') > -1) { try { return JSON.parse(o); } catch (e) { return null; } }\n    return null;\n  }\n  if (typeof o === 'object') {\n    if (o.relevance_to_business !== undefined) return o;\n    for (const k of Object.keys(o)) { const t = findAi(o[k]); if (t) return t; }\n  }\n  return null;\n};\nconst rows = [];\nlet aiFailed = 0;\nfor (let i = 0; i < cands.length; i++) {\n  const c = cands[i];\n  const a = findAi(outs[i]);\n  if (!a) { aiFailed++; continue; }\n  const rel = Number(a.relevance_to_business) || 0;\n  const hook = Number(a.hook_strength) || 0;\n  const qual = Number(a.content_quality) || 0;\n  if (rel < cfg.minRelevance) continue;\n  const flags = Array.isArray(a.compliance_flags) ? a.compliance_flags.filter((f) => f !== 'none') : [];\n  const aiScore = Math.min(100, 10 * (0.45 * rel + 0.3 * hook + 0.25 * qual) + (a.cta_present ? 5 : 0));\n  const penalty = Math.min(flags.length * cfg.compliancePenalty, 45);\n  const finalScore = Math.max(0, cfg.finalWeights.metrics * c.metrics_score + cfg.finalWeights.ai * aiScore - penalty);\n  rows.push({\n    run_id: plan.run_id, run_date: plan.run_date, client_name: brief.client_name, rank: 0,\n    platform: c.platform, post_url: c.url, creator: c.creator || '', followers: c.followers === null ? '' : c.followers,\n    views: c.views === null ? '' : c.views, likes: c.likes === null ? '' : c.likes, comments: c.comments === null ? '' : c.comments, shares: c.shares === null ? '' : c.shares,\n    engagement_rate_pct: c.engagement_rate === null ? '' : Math.round(c.engagement_rate * 10000) / 100,\n    posted_at: c.posted_at || '', final_score: Math.round(finalScore * 10) / 10, metrics_score: c.metrics_score, ai_score: Math.round(aiScore * 10) / 10,\n    content_format: a.content_format || '', hook_strength: hook, why_it_works: a.why_it_works || '', how_to_replicate: a.how_to_replicate || '',\n    compliance_flags: flags.join(', '), risk_flags: Array.isArray(a.risk_flags) ? a.risk_flags.join(', ') : '', confidence: c.confidence,\n    caption_preview: String(c.caption || '').slice(0, 200)\n  });\n}\nrows.sort((x, y) => y.final_score - x.final_score);\nconst top = rows.slice(0, brief.max_results);\ntop.forEach((r, idx) => { r.rank = idx + 1; });\nconst store = $getWorkflowStaticData('global');\nstore.seen = store.seen || {};\nconst nowMs = Date.now();\nfor (const r of top) { store.seen[brief.client_name.toLowerCase() + '|' + r.post_url] = nowMs; }\nfor (const k of Object.keys(store.seen)) { if (nowMs - store.seen[k] > 120 * 86400000) delete store.seen[k]; }\nconst esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst lines = [];\nlines.push('Viral video research done for ' + brief.client_name + ' (' + plan.run_id + ')');\nlines.push('Kept ' + top.length + ' of ' + proc.candidates_found + ' scraped posts (' + cands.length + ' videos AI-scored' + (aiFailed ? ', ' + aiFailed + ' AI failures' : '') + '). Platforms with data: ' + (proc.platforms_with_data || 'none') + '. Errors/blocked: ' + (proc.platforms_with_errors || 'none') + '.');\ntop.slice(0, 3).forEach((r, i) => { lines.push((i + 1) + '. [' + r.platform + '] score ' + r.final_score + ' - ' + r.post_url); });\nlines.push('Full ranked list is in the Results tab of the DMFrame sheet.');\nreturn [{ json: {\n  run_id: plan.run_id, run_date: plan.run_date, client_name: brief.client_name,\n  platforms_requested: proc.platforms_requested, platforms_with_data: proc.platforms_with_data,\n  candidates_found: proc.candidates_found, videos_kept: top.length,\n  top_urls: top.slice(0, 3).map((r) => r.post_url).join(' | '),\n  status: top.length ? 'ok' : (aiFailed === cands.length ? 'ai_scoring_failed' : 'no_results_after_ai_scoring'),\n  summary_text: esc(lines.join('\\n')), rows: top\n} }];"
+      }
+    },
+    {
+      "id": "90c7b701-2f7d-4d55-943d-5892ec66e069",
+      "name": "No New Videos Summary",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2688,
+        720
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "status-note",
+              "name": "status",
+              "value": "no_new_videos",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "8f4ede56-a7c5-458f-8123-23c99924a3b8",
+      "name": "Log Run",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2912,
+        288
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "Q8uoi6Tl87tYMyuX"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $json.run_id }}",
+            "run_date": "={{ $json.run_date }}",
+            "client_name": "={{ $json.client_name }}",
+            "platforms_requested": "={{ $json.platforms_requested }}",
+            "platforms_with_data": "={{ $json.platforms_with_data }}",
+            "candidates_found": "={{ $json.candidates_found }}",
+            "videos_kept": "={{ $json.videos_kept }}",
+            "top_urls": "={{ $json.top_urls }}",
+            "status": "={{ $json.status }}"
+          },
+          "schema": [
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "run_date",
+              "displayName": "run_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "client_name",
+              "displayName": "client_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "platforms_requested",
+              "displayName": "platforms_requested",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "platforms_with_data",
+              "displayName": "platforms_with_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "candidates_found",
+              "displayName": "candidates_found",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "videos_kept",
+              "displayName": "videos_kept",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "top_urls",
+              "displayName": "top_urls",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1e5cfebc-25e6-47fe-b358-3993b639c86e",
+      "name": "Send Telegram Summary",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2912,
+        480
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "7095384890",
+        "text": "={{ $json.summary_text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      },
+      "onError": "continueRegularOutput",
+      "webhookId": "98d6a17e-d7c5-4520-a8fe-c947f5f73373",
+      "credentials": {
+        "telegramApi": {
+          "id": "2rcDXzfMRsJt1sTg",
+          "name": "syncaidm_bot"
+        }
+      }
+    },
+    {
+      "id": "630eb8b4-0486-400c-a7dd-d2df7e575612",
+      "name": "Split Result Rows",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2912,
+        672
+      ],
+      "parameters": {
+        "fieldToSplitOut": "rows",
+        "include": "noOtherFields"
+      }
+    },
+    {
+      "id": "0f9c6e15-c03a-4a14-850d-a1cd5652a95b",
+      "name": "Save To Results Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3136,
+        672
+      ],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "authentication": "oAuth2",
+        "documentId": {
+          "__rl": true,
+          "cachedResultName": "DMFrame",
+          "mode": "id",
+          "value": "1lgyPCEZl_AZwlkwktGX3SyyhtRyN3rdFvB7NrkdTD0M"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Results"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_id": "={{ $json.run_id }}",
+            "run_date": "={{ $json.run_date }}",
+            "client_name": "={{ $json.client_name }}",
+            "rank": "={{ $json.rank }}",
+            "platform": "={{ $json.platform }}",
+            "post_url": "={{ $json.post_url }}",
+            "creator": "={{ $json.creator }}",
+            "followers": "={{ $json.followers }}",
+            "views": "={{ $json.views }}",
+            "likes": "={{ $json.likes }}",
+            "comments": "={{ $json.comments }}",
+            "shares": "={{ $json.shares }}",
+            "engagement_rate_pct": "={{ $json.engagement_rate_pct }}",
+            "posted_at": "={{ $json.posted_at }}",
+            "final_score": "={{ $json.final_score }}",
+            "metrics_score": "={{ $json.metrics_score }}",
+            "ai_score": "={{ $json.ai_score }}",
+            "content_format": "={{ $json.content_format }}",
+            "hook_strength": "={{ $json.hook_strength }}",
+            "why_it_works": "={{ $json.why_it_works }}",
+            "how_to_replicate": "={{ $json.how_to_replicate }}",
+            "compliance_flags": "={{ $json.compliance_flags }}",
+            "risk_flags": "={{ $json.risk_flags }}",
+            "confidence": "={{ $json.confidence }}",
+            "caption_preview": "={{ $json.caption_preview }}"
+          },
+          "schema": [
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "run_date",
+              "displayName": "run_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "client_name",
+              "displayName": "client_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rank",
+              "displayName": "rank",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "platform",
+              "displayName": "platform",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "post_url",
+              "displayName": "post_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "creator",
+              "displayName": "creator",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "followers",
+              "displayName": "followers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "views",
+              "displayName": "views",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "likes",
+              "displayName": "likes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "comments",
+              "displayName": "comments",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "shares",
+              "displayName": "shares",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "engagement_rate_pct",
+              "displayName": "engagement_rate_pct",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "posted_at",
+              "displayName": "posted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "final_score",
+              "displayName": "final_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "metrics_score",
+              "displayName": "metrics_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_score",
+              "displayName": "ai_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "content_format",
+              "displayName": "content_format",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hook_strength",
+              "displayName": "hook_strength",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "why_it_works",
+              "displayName": "why_it_works",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "how_to_replicate",
+              "displayName": "how_to_replicate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "compliance_flags",
+              "displayName": "compliance_flags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "risk_flags",
+              "displayName": "risk_flags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "caption_preview",
+              "displayName": "caption_preview",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XKEcu1U0hU9CGw0P",
+          "name": "Anils Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "f782e044-e85c-4abc-a36b-fb16da1fbca7",
+      "name": "One-Time Setup: Create Results Sheet",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        944
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b951cdb1-4dfa-4dd2-946c-c402d4cadd92",
+      "name": "Create Results Spreadsheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        944
+      ],
+      "parameters": {
+        "resource": "spreadsheet",
+        "operation": "create",
+        "authentication": "oAuth2",
+        "title": "DMFrame",
+        "sheetsUi": {
+          "sheetValues": [
+            {
+              "title": "Results"
+            },
+            {
+              "title": "Instagram"
+            },
+            {
+              "title": "Facebook"
+            },
+            {
+              "title": "LinkedIn"
+            },
+            {
+              "title": "X (Twitter)"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XKEcu1U0hU9CGw0P",
+          "name": "Anils Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "e0abd508-a74e-4424-83cc-ba29d266edd0",
+      "name": "Send Sheet Link",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        944
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "7095384890",
+        "text": "=DMFrame results sheet created: {{ $json.spreadsheetUrl }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "webhookId": "41c9b629-1f12-4e5a-bb40-710e765dd175",
+      "credentials": {
+        "telegramApi": {
+          "id": "2rcDXzfMRsJt1sTg",
+          "name": "syncaidm_bot"
+        }
+      }
+    },
+    {
+      "id": "14df7f2c-20b1-4225-bacc-7d1180ded0f0",
+      "name": "If This Workflow Fails",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        1168
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "294b018a-c591-46db-8357-0dd207c5c279",
+      "name": "Send Failure Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        1168
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "7095384890",
+        "text": "=Workflow failed: {{ $json.workflow.name }}\nFailed at: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\nExecution: {{ $json.execution.url }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_web_page_preview": true,
+          "parse_mode": "HTML"
+        }
+      },
+      "webhookId": "3d695cac-67d1-4cb1-bb11-b19dc68597b3",
+      "credentials": {
+        "telegramApi": {
+          "id": "2rcDXzfMRsJt1sTg",
+          "name": "syncaidm_bot"
+        }
+      }
+    },
+    {
+      "id": "7dff3e26-37c4-4696-b239-12ca319e7250",
+      "name": "Sticky Note 92b0c4f9",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        1168
+      ],
+      "parameters": {
+        "content": "## 1. Intake\nTwo ways in: the form (one brief, saved to dmframe_briefs) or the Monday 7am schedule (every active brief). Briefs then run one at a time through the loop below.",
+        "color": 4
+      }
+    },
+    {
+      "id": "297cba19-440f-4d03-a347-b1424aed2f3f",
+      "name": "Sticky Note 57f6d239",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        1424
+      ],
+      "parameters": {
+        "content": "## 2. Scrape public posts via Apify\nActor IDs and inputs come from Build Run Plan. Each Apify node continues on error so one platform failing never stops the run.",
+        "color": 5
+      }
+    },
+    {
+      "id": "0a3c9f2c-1d00-44b4-b43c-6fa27c20fe9e",
+      "name": "Sticky Note 0e82ea50",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        1680
+      ],
+      "parameters": {
+        "content": "## 3. Filter, score, rank\nVideos only, last 30 days, minimum views, dedupe vs earlier runs, percentile scores, then OpenAI judges relevance, hook, quality and financial-compliance risk. Settings live in cfg inside Build Run Plan.",
+        "color": 6
+      }
+    },
+    {
+      "id": "3c025925-ca85-4068-9f95-243a9290a610",
+      "name": "Sticky Note ca31220d",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        1936
+      ],
+      "parameters": {
+        "content": "## 4. Deliver\nTop videos go to the Results sheet, the run goes to dmframe_run_log and a summary goes to Telegram. Then the loop moves to the next brief.",
+        "color": 3
+      }
+    },
+    {
+      "id": "d769de01-883d-4887-b95c-774f2a9bce61",
+      "name": "Sticky Note 3b9b4c2b",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        2192
+      ],
+      "parameters": {
+        "content": "## One-time setup\nRun the manual trigger once. It creates the Google Sheet and sends the link on Telegram. Then pick that sheet in Save To Results Sheet.",
+        "color": 7
+      }
+    },
+    {
+      "id": "aebd1a23-3d69-423c-b050-4e0f628c0537",
+      "name": "Sticky Note b05689c3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        2448
+      ],
+      "parameters": {
+        "content": "## Failure alerts\nn8n runs this branch automatically when a published run of this workflow fails.",
+        "color": 2
+      }
+    },
+    {
+      "id": "485d33bb-73be-4d02-9991-b0b01b002adc",
+      "name": "Split Scraped Rows",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1900,
+        1100
+      ],
+      "parameters": {
+        "fieldToSplitOut": "scraped",
+        "include": "noOtherFields"
+      }
+    },
+    {
+      "id": "9df84d1d-cc54-4b63-93fa-9cf2f45c2df6",
+      "name": "Route Scraped By Platform",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2124,
+        1100
+      ],
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "operator": {
+                      "operation": "equals",
+                      "type": "string"
+                    },
+                    "rightValue": "instagram"
+                  }
+                ],
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                }
+              },
+              "outputKey": "instagram",
+              "renameOutput": true
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "operator": {
+                      "operation": "equals",
+                      "type": "string"
+                    },
+                    "rightValue": "facebook"
+                  }
+                ],
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                }
+              },
+              "outputKey": "facebook",
+              "renameOutput": true
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "operator": {
+                      "operation": "equals",
+                      "type": "string"
+                    },
+                    "rightValue": "linkedin"
+                  }
+                ],
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                }
+              },
+              "outputKey": "linkedin",
+              "renameOutput": true
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.platform }}",
+                    "operator": {
+                      "operation": "equals",
+                      "type": "string"
+                    },
+                    "rightValue": "x"
+                  }
+                ],
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                }
+              },
+              "outputKey": "x",
+              "renameOutput": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c8ce5cca-cd83-4fca-934d-787d7e59518a",
+      "name": "Save Instagram Videos",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2400,
+        1000
+      ],
+      "parameters": {
+        "authentication": "oAuth2",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "run_id",
+              "id": "run_id",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "run_date",
+              "id": "run_date",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "client_name",
+              "id": "client_name",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "platform",
+              "id": "platform",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "post_url",
+              "id": "post_url",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "creator",
+              "id": "creator",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "followers",
+              "id": "followers",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "views",
+              "id": "views",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "likes",
+              "id": "likes",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "comments",
+              "id": "comments",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "shares",
+              "id": "shares",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "posted_at",
+              "id": "posted_at",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "status",
+              "id": "status",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "metrics_score",
+              "id": "metrics_score",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "caption_preview",
+              "id": "caption_preview",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "caption_preview": "={{ $json.caption_preview }}",
+            "client_name": "={{ $json.client_name }}",
+            "comments": "={{ $json.comments }}",
+            "creator": "={{ $json.creator }}",
+            "followers": "={{ $json.followers }}",
+            "likes": "={{ $json.likes }}",
+            "metrics_score": "={{ $json.metrics_score }}",
+            "platform": "={{ $json.platform }}",
+            "post_url": "={{ $json.post_url }}",
+            "posted_at": "={{ $json.posted_at }}",
+            "run_date": "={{ $json.run_date }}",
+            "run_id": "={{ $json.run_id }}",
+            "shares": "={{ $json.shares }}",
+            "status": "={{ $json.status }}",
+            "views": "={{ $json.views }}"
+          }
+        },
+        "documentId": {
+          "__rl": true,
+          "cachedResultName": "DMFrame",
+          "mode": "id",
+          "value": "1lgyPCEZl_AZwlkwktGX3SyyhtRyN3rdFvB7NrkdTD0M"
+        },
+        "operation": "append",
+        "options": {},
+        "resource": "sheet",
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Instagram"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XKEcu1U0hU9CGw0P",
+          "name": "Anils Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "ea7c1ab1-d710-421c-90c6-f0d374847032",
+      "name": "Save Facebook Videos",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2400,
+        1140
+      ],
+      "parameters": {
+        "authentication": "oAuth2",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "run_id",
+              "id": "run_id",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "run_date",
+              "id": "run_date",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "client_name",
+              "id": "client_name",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "platform",
+              "id": "platform",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "post_url",
+              "id": "post_url",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "creator",
+              "id": "creator",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "followers",
+              "id": "followers",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "views",
+              "id": "views",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "likes",
+              "id": "likes",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "comments",
+              "id": "comments",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "shares",
+              "id": "shares",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "posted_at",
+              "id": "posted_at",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "status",
+              "id": "status",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "metrics_score",
+              "id": "metrics_score",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "caption_preview",
+              "id": "caption_preview",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "caption_preview": "={{ $json.caption_preview }}",
+            "client_name": "={{ $json.client_name }}",
+            "comments": "={{ $json.comments }}",
+            "creator": "={{ $json.creator }}",
+            "followers": "={{ $json.followers }}",
+            "likes": "={{ $json.likes }}",
+            "metrics_score": "={{ $json.metrics_score }}",
+            "platform": "={{ $json.platform }}",
+            "post_url": "={{ $json.post_url }}",
+            "posted_at": "={{ $json.posted_at }}",
+            "run_date": "={{ $json.run_date }}",
+            "run_id": "={{ $json.run_id }}",
+            "shares": "={{ $json.shares }}",
+            "status": "={{ $json.status }}",
+            "views": "={{ $json.views }}"
+          }
+        },
+        "documentId": {
+          "__rl": true,
+          "cachedResultName": "DMFrame",
+          "mode": "id",
+          "value": "1lgyPCEZl_AZwlkwktGX3SyyhtRyN3rdFvB7NrkdTD0M"
+        },
+        "operation": "append",
+        "options": {},
+        "resource": "sheet",
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Facebook"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XKEcu1U0hU9CGw0P",
+          "name": "Anils Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "0fb7f34b-0305-41e6-9620-068acd10a674",
+      "name": "Save LinkedIn Videos",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2400,
+        1280
+      ],
+      "parameters": {
+        "authentication": "oAuth2",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "run_id",
+              "id": "run_id",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "run_date",
+              "id": "run_date",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "client_name",
+              "id": "client_name",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "platform",
+              "id": "platform",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "post_url",
+              "id": "post_url",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "creator",
+              "id": "creator",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "followers",
+              "id": "followers",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "views",
+              "id": "views",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "likes",
+              "id": "likes",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "comments",
+              "id": "comments",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "shares",
+              "id": "shares",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "posted_at",
+              "id": "posted_at",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "status",
+              "id": "status",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "metrics_score",
+              "id": "metrics_score",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "caption_preview",
+              "id": "caption_preview",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "caption_preview": "={{ $json.caption_preview }}",
+            "client_name": "={{ $json.client_name }}",
+            "comments": "={{ $json.comments }}",
+            "creator": "={{ $json.creator }}",
+            "followers": "={{ $json.followers }}",
+            "likes": "={{ $json.likes }}",
+            "metrics_score": "={{ $json.metrics_score }}",
+            "platform": "={{ $json.platform }}",
+            "post_url": "={{ $json.post_url }}",
+            "posted_at": "={{ $json.posted_at }}",
+            "run_date": "={{ $json.run_date }}",
+            "run_id": "={{ $json.run_id }}",
+            "shares": "={{ $json.shares }}",
+            "status": "={{ $json.status }}",
+            "views": "={{ $json.views }}"
+          }
+        },
+        "documentId": {
+          "__rl": true,
+          "cachedResultName": "DMFrame",
+          "mode": "id",
+          "value": "1lgyPCEZl_AZwlkwktGX3SyyhtRyN3rdFvB7NrkdTD0M"
+        },
+        "operation": "append",
+        "options": {},
+        "resource": "sheet",
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "LinkedIn"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XKEcu1U0hU9CGw0P",
+          "name": "Anils Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "746ada69-5892-4b2e-a05d-d55f4d3cddda",
+      "name": "Save X Videos",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2400,
+        1420
+      ],
+      "parameters": {
+        "authentication": "oAuth2",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "run_id",
+              "id": "run_id",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "run_date",
+              "id": "run_date",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "client_name",
+              "id": "client_name",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "platform",
+              "id": "platform",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "post_url",
+              "id": "post_url",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "creator",
+              "id": "creator",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "followers",
+              "id": "followers",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "views",
+              "id": "views",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "likes",
+              "id": "likes",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "comments",
+              "id": "comments",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "shares",
+              "id": "shares",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "posted_at",
+              "id": "posted_at",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "status",
+              "id": "status",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "metrics_score",
+              "id": "metrics_score",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "caption_preview",
+              "id": "caption_preview",
+              "required": false,
+              "type": "string"
+            }
+          ],
+          "value": {
+            "caption_preview": "={{ $json.caption_preview }}",
+            "client_name": "={{ $json.client_name }}",
+            "comments": "={{ $json.comments }}",
+            "creator": "={{ $json.creator }}",
+            "followers": "={{ $json.followers }}",
+            "likes": "={{ $json.likes }}",
+            "metrics_score": "={{ $json.metrics_score }}",
+            "platform": "={{ $json.platform }}",
+            "post_url": "={{ $json.post_url }}",
+            "posted_at": "={{ $json.posted_at }}",
+            "run_date": "={{ $json.run_date }}",
+            "run_id": "={{ $json.run_id }}",
+            "shares": "={{ $json.shares }}",
+            "status": "={{ $json.status }}",
+            "views": "={{ $json.views }}"
+          }
+        },
+        "documentId": {
+          "__rl": true,
+          "cachedResultName": "DMFrame",
+          "mode": "id",
+          "value": "1lgyPCEZl_AZwlkwktGX3SyyhtRyN3rdFvB7NrkdTD0M"
+        },
+        "operation": "append",
+        "options": {},
+        "resource": "sheet",
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "X (Twitter)"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XKEcu1U0hU9CGw0P",
+          "name": "Anils Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Client Brief Form": {
+      "main": [
+        [
+          {
+            "node": "Map Form To Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Form To Brief": {
+      "main": [
+        [
+          {
+            "node": "Save Raw Brief",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "One Brief At A Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Run Plan": {
+      "main": [
+        [
+          {
+            "node": "Route By Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route By Platform": {
+      "main": [
+        [
+          {
+            "node": "Scrape Instagram (Apify)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Scrape Facebook (Apify)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Scrape X (Apify)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Scrape LinkedIn (Apify)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Instagram (Apify)": {
+      "main": [
+        [
+          {
+            "node": "Tag Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag Instagram": {
+      "main": [
+        [
+          {
+            "node": "Combine Platform Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Platform Results": {
+      "main": [
+        [
+          {
+            "node": "Process Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Facebook (Apify)": {
+      "main": [
+        [
+          {
+            "node": "Tag Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag Facebook": {
+      "main": [
+        [
+          {
+            "node": "Combine Platform Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Scrape X (Apify)": {
+      "main": [
+        [
+          {
+            "node": "Tag X",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag X": {
+      "main": [
+        [
+          {
+            "node": "Combine Platform Results",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Scrape LinkedIn (Apify)": {
+      "main": [
+        [
+          {
+            "node": "Tag LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Combine Platform Results",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "One Brief At A Time": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Build Run Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Monday 7am": {
+      "main": [
+        [
+          {
+            "node": "Get Active Briefs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Briefs": {
+      "main": [
+        [
+          {
+            "node": "One Brief At A Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Candidates": {
+      "main": [
+        [
+          {
+            "node": "Any New Candidates?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Scraped Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any New Candidates?": {
+      "main": [
+        [
+          {
+            "node": "Split Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No New Videos Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Candidates": {
+      "main": [
+        [
+          {
+            "node": "AI Score Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Score Video": {
+      "main": [
+        [
+          {
+            "node": "Combine And Rank",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine And Rank": {
+      "main": [
+        [
+          {
+            "node": "Log Run",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Telegram Summary",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Result Rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "One Brief At A Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No New Videos Summary": {
+      "main": [
+        [
+          {
+            "node": "Log Run",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Telegram Summary",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "One Brief At A Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Result Rows": {
+      "main": [
+        [
+          {
+            "node": "Save To Results Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One-Time Setup: Create Results Sheet": {
+      "main": [
+        [
+          {
+            "node": "Create Results Spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Results Spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Send Sheet Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If This Workflow Fails": {
+      "main": [
+        [
+          {
+            "node": "Send Failure Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Scraped Rows": {
+      "main": [
+        [
+          {
+            "node": "Route Scraped By Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Scraped By Platform": {
+      "main": [
+        [
+          {
+            "node": "Save Instagram Videos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save Facebook Videos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save LinkedIn Videos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save X Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "pinData": {}
+}

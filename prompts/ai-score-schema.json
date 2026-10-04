@@ -1,0 +1,58 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "relevance_to_business",
+    "hook_strength",
+    "content_quality",
+    "cta_present",
+    "content_format",
+    "why_it_works",
+    "how_to_replicate",
+    "risk_flags",
+    "compliance_flags"
+  ],
+  "properties": {
+    "relevance_to_business": {
+      "type": "number"
+    },
+    "hook_strength": {
+      "type": "number"
+    },
+    "content_quality": {
+      "type": "number"
+    },
+    "cta_present": {
+      "type": "boolean"
+    },
+    "content_format": {
+      "type": "string"
+    },
+    "why_it_works": {
+      "type": "string"
+    },
+    "how_to_replicate": {
+      "type": "string"
+    },
+    "risk_flags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "compliance_flags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "income_claims",
+          "guaranteed_returns",
+          "get_rich_language",
+          "unlicensed_advice",
+          "misleading_recruitment",
+          "none"
+        ]
+      }
+    }
+  }
+}
